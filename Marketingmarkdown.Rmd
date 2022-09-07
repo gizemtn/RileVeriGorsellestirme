@@ -1,0 +1,203 @@
+---
+title: "Marketting Campaign"
+author: "isim"
+date: "2022-08-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r,include=FALSE}
+library(readr)
+marketing_campaign <- read_delim("C:/RStudio/marketing_campaign.csv", 
+    delim = "\t", escape_double = FALSE, 
+    na = "NA", trim_ws = TRUE)
+#View(marketing_campaign)
+```
+
+### Veri Özeti
+```{r,message=FALSE,include=FALSE}
+str(marketing_campaign)
+```
+
+Ordered veriyi factore çevirdik
+```{r,message=FALSE}
+education=factor(marketing_campaign$Education,ordered = TRUE,levels = c("phD","Master","Gradution","Basic","2nCycle"))
+```
+
+
+summary yaptık ve max değer income da çok fazla olduğu için whic.max yapıp hangi satırda aykırı değer olduğunu baktım.
+```{r,message=FALSE}
+head(marketing_campaign)
+```
+
+
+```{r,message=FALSE}
+summary(marketing_campaign)
+```
+
+
+```{r,inlude=FALSE,message=FALSE}
+boxplot(marketing_campaign$Income)
+```
+
+
+```{r,inlude=FALSE,message=FALSE}
+veri2=as.data.frame(marketing_campaign)
+veri2=veri2[-which.max(marketing_campaign$Income),]
+boxplot(veri2$Income)
+```
+
+NA çıkartıyoruz
+```{r,message=FALSE,results='hide'}
+veri2<-na.omit(veri2)
+veri2
+```
+```{r,message=FALSE}
+library(Amelia)
+missmap(veri2)
+```
+
+
+Ordered factoru sıraya koy ve ata
+```{r,message=FALSE}
+veri2$Education=factor(veri2$Education,ordered =TRUE ,levels = c("phD","Master","Gradution","Basic","2n Cycle"))
+```
+
+
+```{r,message=FALSE}
+epiDisplay::tab1(veri2$Education,sort.group = "decreasing",cum.percent =TRUE,main="Education")
+
+```
+
+
+```{r}
+plot(veri2$Income,veri2$Education,xlab = "Income",ylab = "Education",ylim = c(0,10))
+```
+
+Shapiro Test yapıyoruz
+H0:data are normally
+H1:data are not normally distributed
+```{r}
+z<-shapiro.test(veri2$Income)
+
+if(z$p.value<0.05){
+  cat("data are not normally distributed")
+}else{print("data are normally")}
+
+```
+
+#### WAFFLE CHARTS
+
+```{r,message=FALSE}
+df<-data.frame(veri2$Income[1:20], veri2$MntWines[1:20])
+
+```
+
+```{r,message=FALSE}
+library(waffle)
+waffle(df$veri2.MntWines.1.20.[7:12], rows = 10 )
+```
+```{r}
+waffle(table(veri2$Education[1:300]))
+```
+
+### ÇİZGİ GRAFİK
+
+```{r}
+plot(veri2$Income[1:50],col=c("#FF4500", "#FFFFFF", "#FFFFFF"),type = "l",ylab = "Income",xlab = "Index",pch=20)
+```
+### BEESWARM
+
+```{r}
+beeswarm::beeswarm(veri2$Income,col="red",pch=19,cex=0.5,horizontal=TRUE)
+```
+
+
+#2 DEGİSkENLE BEESWARM
+
+
+```{r}
+beeswarm::beeswarm(veri2$Income ~ veri2$MntWines,
+         pc = 19,
+         col = c("#3FA0FF", "#FFE099", "#F76D5E"),
+         corral= "none",xlab="MntWines",ylab="Income")
+```
+
+
+### CORRAL METHODS
+
+```{r}
+set.seed(12345)
+x1<-rnorm(veri2$Income[1:2000])
+x2<-sample(veri2$Education,size = 2000,replace = TRUE)
+```
+```{r}
+beeswarm::beeswarm(x1~x2,pch=19,col=c("#FFFF00", "#FF0000", "#1E90FF", "#00FA9A", "#458B00"),corral="none")
+```
+```{r}
+beeswarm::beeswarm(x1~x2,pch=19,col=c("#FFFF00", "#FF0000", "#1E90FF", "#00FA9A", "#458B00"),priority="descending")
+```
+
+```{r,message=FALSE}
+library(ggplot2)
+library(ggrastr)
+ggplot(veri2,aes(x=Income,y=Education))+geom_beeswarm_rast()
+```
+
+
+#### PARALEL KORDİNAT
+```{r,message=FALSE,warning=FALSE}
+library(MASS)
+library(GGally)
+data(veri2)
+ggparcoord(veri2,columns = 1:4,groupColumn = 5)
+```
+
+```{r}
+ggparcoord(veri2,columns = 1:5,groupColumn = 10)
+```
+
+```{r,message=FALSE,warning=FALSE}
+library(lattice)
+parallelplot(~veri2[1:5] | Education,veri2)
+```
+
+###  SCATTERPLOT
+```{r}
+veri3<-data.frame(x=rnorm(20),y=rnorm(20))
+plot(veri3,main="Marketting Scatterplot")
+```
+```{r}
+library(ggplot2)
+ggplot(veri2,aes(Education,Income))+geom_point()
+```
+
+```{r}
+library(ggVennDiagram)
+x3<-list(Kidhome=veri2$Kidhome,Teenhome=veri2$Teenhome)
+ggVennDiagram(x3[1:2])
+```
+
+
+
+### Violin Plot
+```{r}
+vioplot::vioplot(veri2$Income)
+```
+
+
+
+```{r}
+vioplot::vioplot(veri2$Income,horizontal=TRUE,col="darkblue",border="black")
+```
+
+
+### ggpubr
+```{r}
+ggpubr::ggviolin(veri2,x="Education",y="Income")
+```
+
